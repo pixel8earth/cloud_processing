@@ -161,7 +161,6 @@ if __name__ == "__main__":
     projected = str(root / 'geo-model-utm.csv')
     geo_transform = str(root / 'geo-transform.npy')
     transformed = str(root / 'geo-model-transformed.csv')
-    temp = str(root / 'sfm.csv')
 
     if os.path.exists(model):
         clean(model)
@@ -173,7 +172,7 @@ if __name__ == "__main__":
 
         # Mesh based ICP
         if has_trimesh:
-            tfm = perform_icp(temp, transformed)
+            tfm = perform_icp(projected, transformed)
             #tfm = perform_icp2(projected, transformed)
             np.save(geo_transform, tfm)
         else:
