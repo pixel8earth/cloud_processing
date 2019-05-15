@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <title>Pixel8 Tests</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+          margin: 0px;
+          background-color: #000000;
+          overflow: hidden;
+        }
+      </style>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/100/three.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.5.0/proj4.js"></script>
+      <script src="../../js/plyloader.js"></script>
+      <script src="../../js/MapControls.js"></script>
+    </head>
+    <body>
+      <script>
+        var renderer,
+          scene,
+          camera,
+          grid,
+          plane,
+          controls;
+        
+        var mouse = new THREE.Vector2();
+        var rotateY = new THREE.Matrix4().makeRotationZ( 0.005 );
+        
+        const OFFSETX = 412451
+        const OFFSETY = 4265844
+        const OFFSETZ = 2171
+        
+        init();
+
+        async function init() {
+          scene = new THREE.Scene();
+          camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100000);
+          camera.up = new THREE.Vector3(0,0,1);
+          camera.position.z = 100;
+          camera.lookAt(new THREE.Vector3(0,0,0))
+        
+          //Setup renderer
+          renderer = new THREE.WebGLRenderer();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          renderer.setClearColor( 0x202020, 0.0);
+          renderer.sortObjects = false;
+        
+          controls = new THREE.MapControls(camera, renderer.domElement);
+          controls.addEventListener('change', render);
+
+          scene.add( new THREE.HemisphereLight( 0x443333, 0xffffff ) );
+        
+          var loader = new THREE.PLYLoader();
+          loader.load( '../../scripts/data/poisson-utm.ply', function ( geometry ) {
+            geometry.computeVertexNormals();
+            var material = new THREE.MeshPhongMaterial({color: 0xffffff, wireframe: true});
+            material.color.set(0x00FFFF);
+            var mesh = new THREE.Mesh(geometry, material);
+            mesh.position.z = - OFFSETZ;
+            mesh.position.x = - OFFSETX;
+            mesh.position.y = - OFFSETY;
+            
+            scene.add(mesh);
+            render()
+          } );
+        
+          //var options = { vertexColors: THREE.VertexColors, size: 0.25 }
+          var options = { color: 0x00ff00, size: 0.15  }
+          //await addCSV('./geo-model-utm.csv', { ...options, color: 0xff0000 }) 
+          await addCSV('./geo-model-transformed-trimesh.csv', options) 
+
+          plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(25*25, 25*25, 25, 25),
+            new THREE.MeshBasicMaterial({color: 0x203020, wireframe: true})
+          );
+          scene.add(plane);
+        
+          document.body.appendChild(renderer.domElement);
+          window.addEventListener('resize', onWindowResize, false);
+          render()
+        }
+
+        function render() {
+          renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        async function addCSV(csv, options) {
+          const points = new THREE.Geometry();
+          const raw = await fetch(csv).then(r => r.text())
+          raw.split('\n').forEach( (line, i) => {
+              const p = line.trim().split(',').map( j => parseFloat(j))
+              if (!isNaN(p[0])) {
+                const color = new THREE.Color();
+                color.setRGB(p[3] / 255.0, p[4] / 255.0, p[5] / 255.0)
+                points.vertices.push(new THREE.Vector3(p[0] - OFFSETX, p[1] - OFFSETY, p[2] - (OFFSETZ)));
+                points.colors.push(color);
+              }
+          })
+          var model = new THREE.Points(points, new THREE.PointsMaterial(options));
+          scene.add(model);
+        }
+
+      </script>
+    </body>
+  </html>
