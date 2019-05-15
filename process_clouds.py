@@ -10,8 +10,6 @@ try:
 except:
     has_trimesh = False
 
-from outliers import remove
-
 def execute(pipeline):
   pipeline = pdal.Pipeline(json.dumps(pipeline))
   pipeline.validate()
@@ -156,7 +154,7 @@ def perform_icp2(projected, output):
 if __name__ == "__main__":
     stream = sys.argv[1]
 
-    root = Path(f'streams/{stream}')
+    root = Path(f'./{stream}')
     model = str(root / 'model.ply')
     geo_model = str(root / 'geo-model.ply')
     geo_clean = str(root / 'geo-model-clean.csv')
