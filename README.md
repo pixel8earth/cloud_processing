@@ -2,4 +2,4 @@
 
 In a conda env with pdal and trimesh installed...
 
-> python process_clouds.py data
+> python process_clouds.py

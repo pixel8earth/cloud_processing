@@ -152,7 +152,7 @@ def perform_icp2(projected, output):
 
 
 if __name__ == "__main__":
-    stream = sys.argv[1]
+    stream = 'data'
 
     root = Path(f'./{stream}')
     model = str(root / 'model.ply')
